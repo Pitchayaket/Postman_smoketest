@@ -1,0 +1,22 @@
+name: Automated API - Smoke Test suite - Apigee and Mock
+
+on: push
+
+jobs:
+  automated-api-tests-apigee:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@v3
+        with:
+            node-version: "18"
+      - name: Install latest uuid npm
+        run: |
+          npm install uuid@7.0.3 -g
+      - name: Install Newman
+        run: |
+          npm install -g newman
+          npm install -g newman-reporter-htmlextra
+      - name: Run POSTMAN collection for Apigee
+        run: |
+         newman run ./Smoketest/Apigee_Mock_Smoketest.postman_collection.json -e ./Smoketest/Smoketest_env.postman_environment.json --reporter-htmlextra-export mock_result.html --verbose
