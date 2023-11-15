@@ -1,0 +1,3659 @@
+{
+	"info": {
+		"_postman_id": "6168840e-13f7-4926-8aba-f95dd40e92d1",
+		"name": "Apigee_Mock_Smoketest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29873059"
+	},
+	"item": [
+		{
+			"name": "1.Apigee Generate ThaiQR",
+			"item": [
+				{
+					"name": "OAuth - Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response",
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    response = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', response.accessToken);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{app-secret}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{app-key}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "CREATE READ",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{api-host}}/oauth/accesstoken",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"oauth",
+								"accesstoken"
+							],
+							"query": [
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[JWTGen] partner signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.unset(\"request-ref\");",
+									"pm.collectionVariables.unset(\"reference1\");",
+									"pm.collectionVariables.unset(\"billerId\");",
+									"",
+									"const moment = require('moment');",
+									"",
+									"pm.collectionVariables.set(\"request-ref\", moment().format(\"yyyyMMDDHHmmss\"));",
+									"pm.collectionVariables.set(\"reference1\", moment().format(\"yyyyMMDDHHmmss01\"));",
+									"pm.collectionVariables.set(\"billerId\", moment().format(\"yyyyMMDDHHmmss0\"));",
+									"pm.collectionVariables.set(\"requestDate\", moment().format(\"yyyy-MM-DD\"));",
+									"pm.collectionVariables.set(\"requestTime\", moment().format(\"HH:mm:ss\"));",
+									"pm.collectionVariables.set(\"transmit-date-time\", moment().format(\"yyyy-MM-DDTHH:mm:ss.855+07:00\"));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"partner_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestDate\": \"{{requestDate}}\",\n    \"requestTime\": \"{{requestTime}}\",\n    \"merchantCountry\": \"TH\",\n    \"merchantName\": \"ABC SHOP\",\n    \"amount\": \"500.00\",\n    \"qrPromptpayInfo\": {\n        \"billerId\": \"{{billerId}}\",\n        \"reference1\": \"{{reference1}}\",\n        \"reference2\": \"1234567890\",\n        \"reference3\": \"1234567891\"\n    },\n    \"extra1\": \"Remark1\",\n    \"extra2\": \"Remark2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/partner",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"partner"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMA101 Generate ThaiQR successfully",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                responseCode: {",
+									"                    type: 'string'",
+									"                },",
+									"                responseMesg: {",
+									"                    type: 'string'",
+									"                },",
+									"                data: {",
+									"                        qrCodeId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        qrReference: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        qrData: {",
+									"                            type: 'string'",
+									"                        }",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"qrCodeId\", response.data.qrCodeId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{partner_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "{{request-ref}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Origin",
+								"value": "http://something.com",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestDate\": \"{{requestDate}}\",\n    \"requestTime\": \"{{requestTime}}\",\n    \"merchantCountry\": \"TH\",\n    \"merchantName\": \"ABC SHOP\",\n    \"amount\": \"500.00\",\n    \"qrPromptpayInfo\": {\n        \"billerId\": \"{{billerId}}\",\n        \"reference1\": \"{{reference1}}\",\n        \"reference2\": \"1234567890\",\n        \"reference3\": \"1234567891\"\n    },\n    \"extra1\": \"Remark1\",\n    \"extra2\": \"Remark2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/biller/v1/qr-generate",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"qr-generate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2.Mock Request Payment",
+			"item": [
+				{
+					"name": "TC_SMM102 Request Payment successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"paymentRequestId\");",
+									"    });",
+									"",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"paymentRequestId\", response.paymentRequestId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevPortalPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthDevPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{request-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"1234567890\",\n    \"reference3\": \"1234567891\",\n    \"amount\": \"500.00\",\n    \"transDate\": \"{{requestDate}}\",\n    \"requestDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\"\n}\n",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/dev-portal/v1/payment-requests",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"dev-portal",
+								"v1",
+								"payment-requests"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3.Mock Get Notification",
+			"item": [
+				{
+					"name": "TC_SMM103 Get Notification - mark PAID successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response",
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"approvalCode\");",
+									"    });",
+									"",
+									"    response = pm.response.json();",
+									"    pm.collectionVariables.set(\"approvalCode\", response.approvalCode)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevPortalPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthDevPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{mock-host}}/dev-portal/v1/notification/{{paymentRequestId}}",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"dev-portal",
+								"v1",
+								"notification",
+								"{{paymentRequestId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4.Apigee Payment Inquiry",
+			"item": [
+				{
+					"name": "[JWTGen] partner signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"partner_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"inquiryDate\": \"{{requestDate}}\",\n    \"inquiryTime\": \"{{requestTime}}\",\n    \"amount\": \"500.00\",\n    \"qrCodeId\": \"{{qrCodeId}}\",\n    \"qrPromptpayInfo\": {\n        \"billerId\": \"{{billerId}}\",\n        \"reference1\": \"{{reference1}}\",\n        \"reference2\": \"1234567890\",\n        \"reference3\": \"1234567891\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/partner",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"partner"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMA104 Payment Inquiry promptpay - card get data successfully (request only qrPromptpayInfo)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"    pm.test(\"Body contains string\",() => {",
+									"        let jsonData = pm.response.json()",
+									"        pm.expect(jsonData.data.statusMesg).to.include(\"PAID\");",
+									"        //pm.expect(jsonData.data.cardNetworkCode).to.include(\"01\");",
+									"        pm.expect(jsonData.data.extra1).to.include(\"Remark1\");",
+									"        pm.expect(jsonData.data.extra2).to.include(\"Remark2\");",
+									"        pm.expect(jsonData.data.termType).to.be.exist;",
+									"        pm.expect(jsonData.data.fromBank).to.include(\"BBL\");",
+									"    });",
+									"",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{partner_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "{{request-ref}}",
+								"type": "text"
+							},
+							{
+								"key": "Origin",
+								"value": "http://something.com",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"inquiryDate\": \"{{requestDate}}\",\n    \"inquiryTime\": \"{{requestTime}}\",\n    \"amount\": \"500.00\",\n    \"qrCodeId\": \"{{qrCodeId}}\",\n    \"qrPromptpayInfo\": {\n        \"billerId\": \"{{billerId}}\",\n        \"reference1\": \"{{reference1}}\",\n        \"reference2\": \"1234567890\",\n        \"reference3\": \"1234567891\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/biller/v1/payment-inquiry",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"payment-inquiry"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5.Apigee Refund Verification",
+			"item": [
+				{
+					"name": "[JWTGen] partner signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"partner_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"1234567890\",\n    \"reference3\": \"1234567891\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"amount\": \"500.00\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/partner",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"partner"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMA105 Refund verification successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                responseCode: {",
+									"                    type: 'string'",
+									"                },",
+									"                responseMesg: {",
+									"                    type: 'string'",
+									"                },",
+									"                data: {",
+									"                        billerId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        reference1: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        amount: {",
+									"                            type: 'decimal'",
+									"                        },",
+									"                        transactionId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        fromName: {",
+									"                            type: 'string'",
+									"                        }",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{partner_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "{{request-ref}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Origin",
+								"value": "http://something.com",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"1234567890\",\n    \"reference3\": \"1234567891\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"amount\": \"500.00\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/biller/v1/refund/verification",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"refund",
+								"verification"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6.Apigee Refund  Reversal",
+			"item": [
+				{
+					"name": "[JWTGen] partner signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"partner_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"1234567890\",\n    \"reference3\": \"1234567891\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"amount\": \"500.00\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/partner",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"partner"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMA106 Refund reversal successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                responseCode: {",
+									"                    type: 'string'",
+									"                },",
+									"                responseMesg: {",
+									"                    type: 'string'",
+									"                },",
+									"                data: {",
+									"                        billerId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        reference1: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        amount: {",
+									"                            type: 'decimal'",
+									"                        },",
+									"                        transactionId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        additionalProperties: false //Should not return fromName",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{partner_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "{{request-ref-reversal}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Origin",
+								"value": "http://something.com",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"1234567890\",\n    \"reference3\": \"1234567891\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"amount\": \"500.00\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/biller/v1/refund/reversal",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"refund",
+								"reversal"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "7.Apigee Refund Advice",
+			"item": [
+				{
+					"name": "[JWTGen] partner signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.unset(\"request-ref\");",
+									"pm.collectionVariables.unset(\"reference1\");",
+									"pm.collectionVariables.unset(\"billerId\");",
+									"",
+									"const moment = require('moment');",
+									"",
+									"pm.collectionVariables.set(\"request-ref\", moment().format(\"yyyyMMDDHHmmss\"));",
+									"pm.collectionVariables.set(\"reference1\", moment().format(\"01yyyyMMDDHHmmss\"));",
+									"pm.collectionVariables.set(\"billerId\", moment().format(\"0yyyyMMDDHHmmss\"));",
+									"pm.collectionVariables.set(\"requestDate\", moment().format(\"yyyy-MM-DD\"));",
+									"pm.collectionVariables.set(\"requestTime\", moment().format(\"HH:mm:ss\"));",
+									"pm.collectionVariables.set(\"transmit-date-time\", moment().format(\"yyyy-MM-DDTHH:mm:ss.855+07:00\"));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"partner_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestDate\": \"{{requestDate}}\",\n    \"requestTime\": \"{{requestTime}}\",\n    \"merchantCountry\": \"TH\",\n    \"merchantName\": \"ABC SHOP\",\n    \"amount\": \"499.09\",\n    \"qrPromptpayInfo\": {\n        \"billerId\": \"{{billerId}}\",\n        \"reference1\": \"{{reference1}}\",\n        \"reference2\": \"\",\n        \"reference3\": \"\"\n    },\n    \"extra1\": \"Remark1\",\n    \"extra2\": \"Remark2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/partner",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"partner"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Generate ThaiQR",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                responseCode: {",
+									"                    type: 'string'",
+									"                },",
+									"                responseMesg: {",
+									"                    type: 'string'",
+									"                },",
+									"                data: {",
+									"                        qrCodeId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        qrReference: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        qrData: {",
+									"                            type: 'string'",
+									"                        }",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"qrCodeId\", response.data.qrCodeId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{partner_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "REF{{request-ref}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Origin",
+								"value": "http://something.com",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"requestDate\": \"{{requestDate}}\",\n    \"requestTime\": \"{{requestTime}}\",\n    \"merchantCountry\": \"TH\",\n    \"merchantName\": \"ABC SHOP\",\n    \"amount\": \"499.09\",\n    \"qrPromptpayInfo\": {\n        \"billerId\": \"{{billerId}}\",\n        \"reference1\": \"{{reference1}}\",\n        \"reference2\": \"\",\n        \"reference3\": \"\"\n    },\n    \"extra1\": \"Remark1\",\n    \"extra2\": \"Remark2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/biller/v1/qr-generate",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"qr-generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Request Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"paymentRequestId\");",
+									"    });",
+									"",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"paymentRequestId\", response.paymentRequestId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevPortalPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthDevPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "REF{{request-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"\",\n    \"reference3\": \"\",\n    \"amount\": \"499.09\",\n    \"transDate\": \"{{requestDate}}\",\n    \"requestDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\"\n}\n",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/dev-portal/v1/payment-requests",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"dev-portal",
+								"v1",
+								"payment-requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Get Notification - mark PAID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response",
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"approvalCode\");",
+									"    });",
+									"",
+									"    response = pm.response.json();",
+									"    pm.collectionVariables.set(\"approvalCode\", response.approvalCode)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevPortalPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthDevPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{mock-host}}/dev-portal/v1/notification/{{paymentRequestId}}",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"dev-portal",
+								"v1",
+								"notification",
+								"{{paymentRequestId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[JWTGen] partner signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"partner_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"\",\n    \"reference3\": \"\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"amount\": \"499.09\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/partner",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"partner"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Refund verification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                responseCode: {",
+									"                    type: 'string'",
+									"                },",
+									"                responseMesg: {",
+									"                    type: 'string'",
+									"                },",
+									"                data: {",
+									"                        billerId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        reference1: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        amount: {",
+									"                            type: 'decimal'",
+									"                        },",
+									"                        transactionId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        fromName: {",
+									"                            type: 'string'",
+									"                        }",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{partner_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "REF{{request-ref}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Origin",
+								"value": "http://something.com",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"\",\n    \"reference3\": \"\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"amount\": \"499.09\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/biller/v1/refund/verification",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"refund",
+								"verification"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[JWTGen] partner signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"partner_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"\",\n    \"reference3\": \"\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"amount\": \"499.09\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/partner",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"partner"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMA107 Refund reversal successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                responseCode: {",
+									"                    type: 'string'",
+									"                },",
+									"                responseMesg: {",
+									"                    type: 'string'",
+									"                },",
+									"                data: {",
+									"                        billerId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        reference1: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        amount: {",
+									"                            type: 'decimal'",
+									"                        },",
+									"                        transactionId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        additionalProperties: false //Should not return fromName",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{partner_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "{{request-ref-reversal}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Origin",
+								"value": "http://something.com",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{billerId}}\",\n    \"reference1\": \"{{reference1}}\",\n    \"reference2\": \"\",\n    \"reference3\": \"\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"amount\": \"499.09\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/biller/v1/refund/reversal",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"refund",
+								"reversal"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "8.Mock Payment Inquiry",
+			"item": [
+				{
+					"name": "TC_SMM114 Pre-Step Mock Generate QR",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"qrCodeId\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.unset(\"mockrequest-ref\");",
+									"pm.collectionVariables.unset(\"mockreference1\");",
+									"pm.collectionVariables.unset(\"mockbillerId\");",
+									"",
+									"const moment = require('moment');",
+									"",
+									"pm.collectionVariables.set(\"mockrequest-ref\", moment().format(\"yyyyMMDDHHmmss\"));",
+									"pm.collectionVariables.set(\"mockreference1\", moment().format(\"yyyyMMDDHHmmss01\"));",
+									"pm.collectionVariables.set(\"mockbillerId\", moment().format(\"yyyyMMDDHHmmss0\"));",
+									"pm.collectionVariables.set(\"requestDate\", moment().format(\"yyyy-MM-DD\"));",
+									"pm.collectionVariables.set(\"requestTime\", moment().format(\"HH:mm:ss\"));",
+									"pm.collectionVariables.set(\"transmit-date-time\", moment().format(\"yyyy-MM-DDTHH:mm:ss.855+07:00\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"qrPromptpayInfo\": {\n        \"billerId\": \"{{mockbillerId}}\",\n        \"reference1\": \"{{mockreference1}}\",\n        \"reference2\": \"\",\n        \"reference3\": \"\"\n    },\n    \"amount\": \"179.00\",\n    \"requestDate\": \"{{requestDate}}\",\n    \"requestTime\": \"{{requestTime}}\",\n    \"merchantCountry\": \"TH\",\n    \"merchantName\": \"KR98370\",\n    \"extra1\": \"extraInfo1\",\n    \"extra2\": \"extraInfo2\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/biller/v1/qr-generate",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"qr-generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Request Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"paymentRequestId\");",
+									"    });",
+									"",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"paymentRequestId\", response.paymentRequestId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevPortalPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthDevPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{mockbillerId}}\",\n    \"reference1\": \"{{mockreference1}}\",\n    \"reference2\": \"\", //should be unique for each request\n    \"reference3\": \"\",\n    \"amount\": \"179.00\",\n    \"transDate\": \"{{requestDate}}\",\n    \"requestDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\"\n}\n",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/dev-portal/v1/payment-requests",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"dev-portal",
+								"v1",
+								"payment-requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Get Notification - mark PAID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response",
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"approvalCode\");",
+									"    });",
+									"",
+									"    response = pm.response.json();",
+									"    pm.collectionVariables.set(\"approvalCode\", response.approvalCode)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevPortalPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthDevPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{mock-host}}/dev-portal/v1/notification/{{paymentRequestId}}",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"dev-portal",
+								"v1",
+								"notification",
+								"{{paymentRequestId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMM108 Payment Inquiry - PAID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        let jsonData = pm.response.json()",
+									"        pm.expect(jsonData.data.statusMesg).to.include(\"PAID\");",
+									"        pm.expect(jsonData.data.cardNetworkCode).to.include(\"01\");",
+									"        pm.expect(jsonData.data.extra1).to.include(\"extraInfo1\");",
+									"        pm.expect(jsonData.data.extra2).to.include(\"extraInfo2\");",
+									"        pm.expect(jsonData.data.termType).to.be.exist;",
+									"        pm.expect(jsonData.data.fromBank).to.include(\"BBL\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"qrPromptpayInfo\": {\r\n        \"billerId\": \"{{mockbillerId}}\",\r\n        \"reference1\": \"{{mockreference1}}\",\r\n        \"reference2\": \"\",\r\n        \"reference3\": \"\"\r\n    },\r\n    \"qrCardInfo\": {\r\n        \"merchantId\": \"merchant123\",\r\n        \"merchantTransRef\": \"merchantTransRef123456\",\r\n        \"terminalId\": \"terminal123\",\r\n        \"amount\": \"1000.00\",\r\n        \"qrCodeId\": \"qrCodeId123\"\r\n    },\r\n    \"amount\": \"179.00\",\r\n    \"inquiryDate\": \"{{requestDate}}\",\r\n    \"inquiryTime\": \"{{requestTime}}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{mock-host}}/biller/v1/payment-inquiry",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"payment-inquiry"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMM115 Pre-Step Verify Refund (mark PRE-VOID)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"transactionId\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{mockbillerId}}\",\n    \"reference1\": \"{{mockreference1}}\",\n    \"reference2\": \"\",\n    \"reference3\": \"\",\n    \"amount\": \"179.00\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/v1/refund/verification",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"v1",
+								"refund",
+								"verification"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMM109 Payment Inquiry - PREVOID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        let jsonData = pm.response.json()",
+									"        pm.expect(jsonData.data.statusMesg).to.include(\"PREVOID\");",
+									"        pm.expect(jsonData.data.cardNetworkCode).to.include(\"01\");",
+									"        pm.expect(jsonData.data.extra1).to.include(\"extraInfo1\");",
+									"        pm.expect(jsonData.data.extra2).to.include(\"extraInfo2\");",
+									"        pm.expect(jsonData.data.termType).to.be.exist;",
+									"        pm.expect(jsonData.data.fromBank).to.include(\"BBL\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"qrPromptpayInfo\": {\r\n        \"billerId\": \"{{mockbillerId}}\",\r\n        \"reference1\": \"{{mockreference1}}\",\r\n        \"reference2\": \"\",\r\n        \"reference3\": \"\"\r\n    },\r\n    \"qrCardInfo\": {\r\n        \"merchantId\": \"merchant123\",\r\n        \"merchantTransRef\": \"merchantTransRef123456\",\r\n        \"terminalId\": \"terminal123\",\r\n        \"amount\": \"1000.00\",\r\n        \"qrCodeId\": \"qrCodeId123\"\r\n    },\r\n    \"amount\": \"179.00\",\r\n    \"inquiryDate\": \"{{requestDate}}\",\r\n    \"inquiryTime\": \"{{requestTime}}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{mock-host}}/biller/v1/payment-inquiry",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"payment-inquiry"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMM116 Pre-Step Advice Refund (mark PRE-VOID > VOID)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    /*pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"transactionId\");",
+									"    });*/",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                responseCode: {",
+									"                    type: 'string'",
+									"                },",
+									"                responseMesg: {",
+									"                    type: 'string'",
+									"                },",
+									"                data: {",
+									"                        billerId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        reference1: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        amount: {",
+									"                            type: 'decimal'",
+									"                        },",
+									"                        transactionId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        additionalProperties: false",
+									"                },",
+									"                additionalProperties: false",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{mockbillerId}}\",\n    \"reference1\": \"{{mockreference1}}\",\n    \"reference2\": \"\", //should be unique for each request\n    \"reference3\": \"\",\n    \"amount\": \"179.00\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/v1/refund/advice",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"v1",
+								"refund",
+								"advice"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMM110 Payment Inquiry - VOID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        let jsonData = pm.response.json()",
+									"        pm.expect(jsonData.data.statusMesg).to.include(\"VOID\");",
+									"        pm.expect(jsonData.data.cardNetworkCode).to.include(\"01\");",
+									"        pm.expect(jsonData.data.extra1).to.include(\"extraInfo1\");",
+									"        pm.expect(jsonData.data.extra2).to.include(\"extraInfo2\");",
+									"        pm.expect(jsonData.data.termType).to.be.exist;",
+									"        pm.expect(jsonData.data.fromBank).to.include(\"BBL\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"qrPromptpayInfo\": {\r\n        \"billerId\": \"{{mockbillerId}}\",\r\n        \"reference1\": \"{{mockreference1}}\",\r\n        \"reference2\": \"\",\r\n        \"reference3\": \"\"\r\n    },\r\n    \"qrCardInfo\": {\r\n        \"merchantId\": \"merchant123\",\r\n        \"merchantTransRef\": \"merchantTransRef123456\",\r\n        \"terminalId\": \"terminal123\",\r\n        \"amount\": \"1000.00\",\r\n        \"qrCodeId\": \"qrCodeId123\"\r\n    },\r\n    \"amount\": \"179.00\",\r\n    \"inquiryDate\": \"{{requestDate}}\",\r\n    \"inquiryTime\": \"{{requestTime}}\"\r\n}"
+						},
+						"url": {
+							"raw": "{{mock-host}}/biller/v1/payment-inquiry",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"payment-inquiry"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Mock Generate QR",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"qrCodeId\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.unset(\"mockrequest-ref\");",
+									"pm.collectionVariables.unset(\"mockreference1\");",
+									"pm.collectionVariables.unset(\"mockbillerId\");",
+									"",
+									"const moment = require('moment');",
+									"",
+									"pm.collectionVariables.set(\"mockrequest-ref\", moment().format(\"yyyyMMDDHHmmss\"));",
+									"pm.collectionVariables.set(\"mockreference1\", moment().format(\"yyyyMMDDHHmmss01\"));",
+									"pm.collectionVariables.set(\"mockbillerId\", moment().format(\"yyyyMMDDHHmmss0\"));",
+									"pm.collectionVariables.set(\"requestDate\", moment().format(\"yyyy-MM-DD\"));",
+									"pm.collectionVariables.set(\"requestTime\", moment().format(\"HH:mm:ss\"));",
+									"pm.collectionVariables.set(\"transmit-date-time\", moment().format(\"yyyy-MM-DDTHH:mm:ss.855+07:00\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"qrPromptpayInfo\": {\n        \"billerId\": \"{{mockbillerId}}\",\n        \"reference1\": \"{{mockreference1}}\",\n        \"reference2\": \"\",\n        \"reference3\": \"\"\n    },\n    \"amount\": \"279.00\",\n    \"requestDate\": \"{{requestDate}}\",\n    \"requestTime\": \"{{requestTime}}\",\n    \"merchantCountry\": \"TH\",\n    \"merchantName\": \"KR98370\",\n    \"extra1\": \"extraInfo1\",\n    \"extra2\": \"extraInfo2\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/biller/v1/qr-generate",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"biller",
+								"v1",
+								"qr-generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Request Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"paymentRequestId\");",
+									"    });",
+									"",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"paymentRequestId\", response.paymentRequestId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevPortalPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthDevPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{mockbillerId}}\",\n    \"reference1\": \"{{mockreference1}}\",\n    \"reference2\": \"\", //should be unique for each request\n    \"reference3\": \"\",\n    \"amount\": \"279.00\",\n    \"transDate\": \"{{requestDate}}\",\n    \"requestDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\"\n}\n",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/dev-portal/v1/payment-requests",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"dev-portal",
+								"v1",
+								"payment-requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Get Notification - mark PAID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response",
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"approvalCode\");",
+									"    });",
+									"",
+									"    response = pm.response.json();",
+									"    pm.collectionVariables.set(\"approvalCode\", response.approvalCode)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevPortalPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthDevPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{mock-host}}/dev-portal/v1/notification/{{paymentRequestId}}",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"dev-portal",
+								"v1",
+								"notification",
+								"{{paymentRequestId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pre-Step Verify Refund (mark PRE-VOID)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"transactionId\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{mockbillerId}}\",\n    \"reference1\": \"{{mockreference1}}\",\n    \"reference2\": \"\", //should be unique for each request\n    \"reference3\": \"\",\n    \"amount\": \"279.00\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/v1/refund/verification",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"v1",
+								"refund",
+								"verification"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMM117 Reversal Refund successfully (PRE-VOID > PAID)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    /*pm.test(\"Body contains string\",() => {",
+									"        pm.expect(pm.response.text()).to.include(\"transactionId\");",
+									"    });*/",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                responseCode: {",
+									"                    type: 'string'",
+									"                },",
+									"                responseMesg: {",
+									"                    type: 'string'",
+									"                },",
+									"                data: {",
+									"                        billerId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        reference1: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        amount: {",
+									"                            type: 'decimal'",
+									"                        },",
+									"                        transactionId: {",
+									"                            type: 'string'",
+									"                        },",
+									"                        additionalProperties: false",
+									"                },",
+									"                additionalProperties: false",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{basicAuthDevProxyPassword}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{basicAuthProxyPortalUser}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"description": "(Required) ",
+								"key": "transmit-date-time",
+								"value": "{{transmit-date-time}}"
+							},
+							{
+								"description": "(Required) This field should be unique for each sequence of request.",
+								"key": "request-ref",
+								"value": "{{mockrequest-ref}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"billerId\": \"{{mockbillerId}}\",\n    \"reference1\": \"{{mockreference1}}\",\n    \"reference2\": \"\", //should be unique for each request\n    \"reference3\": \"\",\n    \"amount\": \"279.00\",\n    \"transDate\": \"{{requestDate}}\",\n    \"transTime\": \"{{requestTime}}\",\n    \"approvalCode\": \"{{approvalCode}}\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{mock-host}}/v1/refund/reversal",
+							"host": [
+								"{{mock-host}}"
+							],
+							"path": [
+								"v1",
+								"refund",
+								"reversal"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "9.Apigee Global Notification",
+			"item": [
+				{
+					"name": "[JWTGen] BBL signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.unset(\"request-ref-globalnoti-app\");",
+									"pm.collectionVariables.unset(\"billerId-globalnoti-app\");",
+									"pm.collectionVariables.unset(\"reference1-globalnoti-app\");",
+									"",
+									"const moment = require('moment');",
+									"",
+									"pm.collectionVariables.set(\"billerId-globalnoti-app\", moment().format(\"yyyyMMDDHHmmss\"));",
+									"pm.collectionVariables.set(\"reference1-globalnoti-app\", moment().format(\"yyyyMMDDHHmmss01\"));",
+									"pm.collectionVariables.set(\"payment-date-time\", moment().format(\"yyyy-MM-DDTHH:mm:ss.855+07:00\"));",
+									"pm.collectionVariables.set(\"transDate-globalnoti-app\", moment().format(\"yyyy-MM-DD\"));",
+									"pm.collectionVariables.set(\"transTime-globalnoti-app\", moment().format(\"HH:mm:ss\"));",
+									"pm.collectionVariables.set(\"transmit-date-time-app\", moment().format(\"yyyy-MM-DDTHH:mm:ss.855+07:00\"));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"bbl_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJib2R5Ijoie1xuICAgIFwicGF5bWVudFJlcXVlc3RJZFwiOiBcIjIzNEFCQjU4Q0MwMFwiLFxuICAgIFwic2VydmljZUNvZGVcIjogXCJCQkxURVNUXCIsXG4gICAgXCJwcm92aWRlcklkXCI6IFwiQkJMVEVTVFwiLFxuICAgIFwiYmlsbGVySWRcIjogXCIxMjM0NTY3ODkwMTIzNDVcIixcbiAgICBcInJlZmVyZW5jZTFcIjogXCIxMTI0NTc5OTk4IVwiLFxuICAgIFwicmVmZXJlbmNlMlwiOiBcIjIyNTU1MzQ3QUJcIixcbiAgICBcInJlZmVyZW5jZTNcIjogXCIyMDE3MTEwNjE1MTU1MFwiLFxuICAgIFwidG90YWxBbW91bnRcIjogOTk5OTk5OTk5Ljk5LFxuICAgIFwiY3VycmVuY3lDb2RlXCI6IFwiVEhCXCIsXG4gICAgXCJwYXltZW50U3RhdHVzXCI6IFwic3VjY2Vzc1wiLFxuICAgIFwicGF5bWVudEFjY291bnRcIjogXCJ4eHgteC14MDA1NS14XCIsXG4gICAgXCJwYXltZW50RGF0ZVRpbWVcIjogXCIyMDE3LTAyLTE1VDE1OjIzOjExLjAwMSswNzowMFwiLFxuICAgIFwicGF5bWVudFJlZmVyZW5jZUlEXCI6IFwiMTIzNDU2XCIsXG4gICAgXCJzbGlwSW1hZ2VcIjogXCJpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBQVVBQUFBRkNBWUFBQUNOYnlibEFBQUFIRWxFUVZRSTEyUDRcL1wvOFwvdzM4R0lBWERJQktFMERIeGdsak5CQUFPOVRYTDBZNE9Id0FBQUFCSlJVNUVya0pnZ2c9PVwiLFxuICAgIFwicGF5ZWVJZFwiOiBcIjEyMzQ1Njc4OTAxMjNcIixcbiAgICBcInRyYW5zRGF0ZVwiOiBcIjIwMTctMTEtMTZcIixcbiAgICBcInRyYW5zVGltZVwiOiBcIjE3OjUwOjUwXCIsXG4gICAgXCJ0cmFuc1JlZlwiOiBcIjEwMDk5OTEyMzQ1Njc4OVwiLFxuICAgIFwiY2hhbm5lbFwiOiBcIkNcIixcbiAgICBcInRlcm1UeXBlXCI6IFwiODBcIixcbiAgICBcInRlcm1JZFwiOiBcIjAxMDEyNVwiLFxuICAgIFwiYW1vdW50XCI6IDk5OTk5OTk5OTk5OTk5OS45OSxcbiAgICBcImZyb21CYW5rXCI6IFwiMDAyXCIsXG4gICAgXCJmcm9tQnJhbmNoXCI6IFwiMDE0N1wiLFxuICAgIFwiZnJvbU5hbWVcIjogXCJBQkNEXCIsXG4gICAgXCJiYW5rUmVmXCI6IFwiQkJMXCIsXG4gICAgXCJhcHByb3ZhbENvZGVcIjogXCJFWEFNUExcIixcbiAgICBcInR4blR5cGVcIjogXCJDXCIsXG4gICAgXCJyZXRyeUZsYWdcIjogXCJZXCJcbn0iLCJleHAiOjE2ODU3MDIxMzEsImlhdCI6MTY4NTYxNTczMSwianRpIjoiNTQxMzNkODQtMDYyYi00NTUxLTk3ZTgtMzQ3ZTQ1YzMwOGU3In0.VEWEqYCsp7tetDWu1ZaPVW_13ewIoHJwqX7Q_hJWn_F9pUp-92VNbRnEdsPN0e41auIZJe2oithadqPKZvvZhYPWkjucYWXSyHeE32q-sBMlSo_Uf2sqb_bHFKGpZYKQTGmeaEjNs7aPUjApCm6EYxFVoyEGYOtU4t2l9qjC3eSt-3hYR2_FQJMoxvLUt1Nwu19it_8SES--cQ6PwcvoXWnQbBoE8j5wp5sGZmXP__-oWW7xAn6EqteXU9QvaTkE9Nzu2dJCfmpaLi2fBP82qHt6MqPfWZsZJ1gqw9tP8W7yxXimnRmpItZqB_53CdWmSvVUYpXqsBLGHrsweOMqRD-a03IX8aA1zVuFeQ3QsqtJKkp-pz7a9ZsfGemC2veEwxbLzm1QSe2iD1d4Qbjsan-Hdi78Uf1zhTQW1JOPygZPkNihxZ9TtjQvw9k0w0gHgcdhWSa7NUIbhoKGaGnawtqs9HjYLurJDVDvHF-681TBWVa4ipIrRISkZodCAUVUE8XUNQhxys02ObGpxa4O9Gc8JrCnMcSmCO5L2trmvpUVQkdoPLfbqyMBitHTIzt6oQWbnbE4Xp2pwkl0lmfCWq6OK-iZIoMtuaSpKi8lusYZTxZki2EA6OvUv_ibKbxI39VwEstqwOhA06rL60TEBPIKe_Birs44Iwk3ZQIwjjk",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "transmit-date-time-app",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "request-ref-globalnoti-app",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"AppToApp\",\n    \"data\": {\n        \"serviceCode\": \"BBLTEST1\",\n        \"billerId\": \"{{billerId-globalnoti-app}}\",\n        \"reference1\": \"{{reference1-globalnoti-app}}\",\n        \"reference2\": \"APP1001\",\n        \"totalAmount\": \"1999.80\",\n        \"currencyCode\": \"THB\",\n        \"paymentStatus\": \"SUCCESS\",\n        \"paymentAccount\": \"xxx-x-x0055-x\",\n        \"paymentDateTime\": \"{{payment-date-time}}\",\n        \"paymentReferenceID\": \"123456\",\n        \"slipImage\": \"iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/bbl",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"bbl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMA111 Send Global Notification - type AppToApp success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"    pm.test(\"Body contains string\",() => {",
+									"        let jsonData = pm.response.json()",
+									"        pm.expect(jsonData.responseCode).to.include(\"000\");",
+									"        pm.expect(jsonData.responseMesg).to.include(\"success\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{partner-server-basic-password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{partner-server-basic-username}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{bbl_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Basic dGhpc2lzdXNlcm5hbWU6dGhpc2lzcGFzc3dvcmQ=",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"AppToApp\",\n    \"data\": {\n        \"serviceCode\": \"BBLTEST1\",\n        \"billerId\": \"{{billerId-globalnoti-app}}\",\n        \"reference1\": \"{{reference1-globalnoti-app}}\",\n        \"reference2\": \"APP1001\",\n        \"totalAmount\": \"1999.80\",\n        \"currencyCode\": \"THB\",\n        \"paymentStatus\": \"SUCCESS\",\n        \"paymentAccount\": \"xxx-x-x0055-x\",\n        \"paymentDateTime\": \"{{payment-date-time}}\",\n        \"paymentReferenceID\": \"123456\",\n        \"slipImage\": \"iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/notification/v1",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"notification",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[JWTGen] BBL signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.unset(\"request-ref-globalnoti-thaiqr\");",
+									"pm.collectionVariables.unset(\"billerId-globalnoti-thaiqr\");",
+									"pm.collectionVariables.unset(\"reference1-globalnoti-thaiqr\");",
+									"",
+									"const moment = require('moment');",
+									"",
+									"pm.collectionVariables.set(\"request-ref-globalnoti-thaiqr\", moment().format(\"DDMMyyyyHHmmss\"));",
+									"pm.collectionVariables.set(\"billerId-globalnoti-thaiqr\", moment().format(\"DDMMyyyyHHmmss0\"));",
+									"pm.collectionVariables.set(\"reference1-globalnoti-thaiqr\", moment().format(\"DDMMyyyyHHmmss01\"));",
+									"pm.collectionVariables.set(\"transDate-globalnoti-thaiqr\", moment().format(\"yyyy-MM-DD\"));",
+									"pm.collectionVariables.set(\"transTime-globalnoti-thaiqr\", moment().format(\"HH:mm:ss\"));",
+									"pm.collectionVariables.set(\"transmit-date-time-globalnoti\", moment().format(\"yyyy-MM-DDTHH:mm:ss.855+07:00\"));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"bbl_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time-globalnoti}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "{{request-ref-globalnoti-thaiqr}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"ThaiQR\",\n    \"data\": {\n        \"providerId\": \"BBLTEST2\",\n        \"billerId\": \"{{billerId-globalnoti-thaiqr}}\",\n        \"reference1\": \"{{reference1-globalnoti-thaiqr}}\",\n        \"reference2\": \"22555347AB\",\n        \"reference3\": \"20171106151550\",\n        \"transDate\": \"{{transDate-globalnoti-thaiqr}}\",\n        \"transTime\": \"{{transTime-globalnoti-thaiqr}}\",\n        \"termType\": \"80\",\n        \"amount\": \"1999.00\",\n        \"fromBank\": \"002\",\n        \"fromBranch\": \"0147\",\n        \"fromName\": \"ABCD\",\n        \"bankRef\": \"BBL\",\n        \"approvalCode\": \"EXAMPL\",\n        \"retryFlag\": \"Y\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/bbl",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"bbl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMA112 Send Global Notification - type ThaiQR success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"    pm.test(\"Body contains string\",() => {",
+									"        let jsonData = pm.response.json()",
+									"        pm.expect(jsonData.responseCode).to.include(\"000\");",
+									"        pm.expect(jsonData.responseMesg).to.include(\"success\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{partner-server-basic-password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{partner-server-basic-username}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{bbl_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Basic dGhpc2lzdXNlcm5hbWU6dGhpc2lzcGFzc3dvcmQ=",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"ThaiQR\",\n    \"data\": {\n        \"providerId\": \"BBLTEST2\",\n        \"billerId\": \"{{billerId-globalnoti-thaiqr}}\",\n        \"reference1\": \"{{reference1-globalnoti-thaiqr}}\",\n        \"reference2\": \"22555347AB\",\n        \"reference3\": \"20171106151550\",\n        \"transDate\": \"{{transDate-globalnoti-thaiqr}}\",\n        \"transTime\": \"{{transTime-globalnoti-thaiqr}}\",\n        \"termType\": \"80\",\n        \"amount\": \"1999.00\",\n        \"fromBank\": \"002\",\n        \"fromBranch\": \"0147\",\n        \"fromName\": \"ABCD\",\n        \"bankRef\": \"BBL\",\n        \"approvalCode\": \"EXAMPL\",\n        \"retryFlag\": \"Y\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/notification/v1",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"notification",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[JWTGen] BBL signature",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.unset(\"payeeId-globalnoti-smartbill\");",
+									"pm.collectionVariables.unset(\"billerId-globalnoti-smartbill\");",
+									"pm.collectionVariables.unset(\"reference1-globalnoti-smartbill\");",
+									"",
+									"const moment = require('moment');",
+									"",
+									"pm.collectionVariables.set(\"payeeId-globalnoti-smartbill\", moment().format(\"DDMMyyyyHHmmss\"));",
+									"pm.collectionVariables.set(\"billerId-globalnoti-smartbill\", moment().format(\"DDMMyyyyHHmmss0\"));",
+									"pm.collectionVariables.set(\"reference1-globalnoti-smartbill\", moment().format(\"DDMMyyyyHHmmss01\"));",
+									"pm.collectionVariables.set(\"transDate-globalnoti-smartbill\", moment().format(\"yyyy-MM-DD\"));",
+									"pm.collectionVariables.set(\"transTime-globalnoti-smartbill\", moment().format(\"HH:mm:ss\"));",
+									"pm.collectionVariables.set(\"transmit-date-time-globalnoti\", moment().format(\"yyyy-MM-DDTHH:mm:ss.855+07:00\"));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test(\"Schema is valid\",() => {",
+									"        const schema = {",
+									"            type: 'object',",
+									"            properties: {",
+									"                signature: {",
+									"                    type: 'string'",
+									"                }",
+									"            }",
+									"        };",
+									"        pm.response.to.have.jsonSchema(schema);",
+									"    });",
+									"    let response = pm.response.json();",
+									"    pm.collectionVariables.set(\"bbl_signature\", response.signature);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Transmit-Date-Time",
+								"value": "{{transmit-date-time-globalnoti}}",
+								"type": "text"
+							},
+							{
+								"key": "Request-Ref",
+								"value": "{{request-ref-globalnoti-thaiqr}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"SmartBill\",\n    \"data\": {\n        \"billerId\": \"{{billerId-globalnoti-smartbill}}\",\n        \"reference1\": \"{{reference1-globalnoti-smartbill}}\",\n        \"reference2\": \"22555347SB\",\n        \"reference3\": \"20231106151550\",\n        \"payeeId\": \"{{payeeId-globalnoti-smartbill}}\",\n        \"transDate\": \"{{transDate-globalnoti-smartbill}}\",\n        \"transTime\": \"{{transTime-globalnoti-smartbill}}\",\n        \"transRef\": \"Ref2023110501\",\n        \"channel\": \"AA\",\n        \"termId\": \"010125\",\n        \"amount\": \"1999.00\",\n        \"fromBank\": \"002\",\n        \"fromBranch\": \"0147\",\n        \"fromName\": \"ABCD\",\n        \"bankRef\": \"BBL\",\n        \"approvalCode\": \"EXAMPL\",\n        \"txnType\": \"C\",\n        \"retryFlag\": \"Y\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/jwt/bbl",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"jwt",
+								"bbl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_SMA113 Send Global Notification - type SmartBill success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response body is JSON\", function () {",
+									"    pm.response.to.be.json;",
+									"",
+									"    pm.test(\"Status code is 200\", function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"    pm.test(\"Body contains string\",() => {",
+									"        let jsonData = pm.response.json()",
+									"        pm.expect(jsonData.responseCode).to.include(\"000\");",
+									"        pm.expect(jsonData.responseMesg).to.include(\"success\");",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{partner-server-basic-password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{partner-server-basic-username}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Signature",
+								"value": "{{bbl_signature}}",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Basic dGhpc2lzdXNlcm5hbWU6dGhpc2lzcGFzc3dvcmQ=",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"SmartBill\",\n    \"data\": {\n        \"billerId\": \"{{billerId-globalnoti-smartbill}}\",\n        \"reference1\": \"{{reference1-globalnoti-smartbill}}\",\n        \"reference2\": \"22555347SB\",\n        \"reference3\": \"20231106151550\",\n        \"payeeId\": \"{{payeeId-globalnoti-smartbill}}\",\n        \"transDate\": \"{{transDate-globalnoti-smartbill}}\",\n        \"transTime\": \"{{transTime-globalnoti-smartbill}}\",\n        \"transRef\": \"Ref2023110501\",\n        \"channel\": \"AA\",\n        \"termId\": \"010125\",\n        \"amount\": \"1999.00\",\n        \"fromBank\": \"002\",\n        \"fromBranch\": \"0147\",\n        \"fromName\": \"ABCD\",\n        \"bankRef\": \"BBL\",\n        \"approvalCode\": \"EXAMPL\",\n        \"txnType\": \"C\",\n        \"retryFlag\": \"Y\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{api-host}}/notification/v1",
+							"protocol": "https",
+							"host": [
+								"{{api-host}}"
+							],
+							"path": [
+								"notification",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "accessToken",
+			"value": ""
+		},
+		{
+			"key": "request-ref",
+			"value": ""
+		},
+		{
+			"key": "reference1",
+			"value": ""
+		},
+		{
+			"key": "billerId",
+			"value": ""
+		},
+		{
+			"key": "requestDate",
+			"value": ""
+		},
+		{
+			"key": "requestTime",
+			"value": ""
+		},
+		{
+			"key": "transmit-date-time",
+			"value": ""
+		},
+		{
+			"key": "partner_signature",
+			"value": ""
+		},
+		{
+			"key": "qrCodeId",
+			"value": ""
+		},
+		{
+			"key": "paymentRequestId",
+			"value": ""
+		},
+		{
+			"key": "approvalCode",
+			"value": ""
+		},
+		{
+			"key": "mockrequest-ref",
+			"value": ""
+		},
+		{
+			"key": "mockreference1",
+			"value": ""
+		},
+		{
+			"key": "mockbillerId",
+			"value": ""
+		},
+		{
+			"key": "billerId-globalnoti-app",
+			"value": ""
+		},
+		{
+			"key": "reference1-globalnoti-app",
+			"value": ""
+		},
+		{
+			"key": "payment-date-time",
+			"value": ""
+		},
+		{
+			"key": "transDate-globalnoti-app",
+			"value": ""
+		},
+		{
+			"key": "transTime-globalnoti-app",
+			"value": ""
+		},
+		{
+			"key": "transmit-date-time-app",
+			"value": ""
+		},
+		{
+			"key": "bbl_signature",
+			"value": ""
+		},
+		{
+			"key": "request-ref-globalnoti-thaiqr",
+			"value": ""
+		},
+		{
+			"key": "billerId-globalnoti-thaiqr",
+			"value": ""
+		},
+		{
+			"key": "reference1-globalnoti-thaiqr",
+			"value": ""
+		},
+		{
+			"key": "transDate-globalnoti-thaiqr",
+			"value": ""
+		},
+		{
+			"key": "transTime-globalnoti-thaiqr",
+			"value": ""
+		},
+		{
+			"key": "transmit-date-time-globalnoti",
+			"value": ""
+		},
+		{
+			"key": "payeeId-globalnoti-smartbill",
+			"value": ""
+		},
+		{
+			"key": "billerId-globalnoti-smartbill",
+			"value": ""
+		},
+		{
+			"key": "reference1-globalnoti-smartbill",
+			"value": ""
+		},
+		{
+			"key": "transDate-globalnoti-smartbill",
+			"value": ""
+		},
+		{
+			"key": "transTime-globalnoti-smartbill",
+			"value": ""
+		}
+	]
+}
